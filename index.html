@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en" data-mode="ops" data-power="booting" data-lock="0" data-armed="0">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>SCI-FI Control Panel — Haunted Industrial Console</title>
+    <meta
+      name="description"
+      content="A CSS-heavy sci-fi operations console: telemetry, radar sweep, incident log, and system commands."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Skip to console</a>
+
+    <div class="scene" id="app" aria-label="Operations console">
+      <div class="bg" aria-hidden="true">
+        <div class="bg-grid"></div>
+        <div class="bg-noise"></div>
+        <div class="bg-vignette"></div>
+        <div class="bg-scanlines"></div>
+        <div class="bg-glow"></div>
+      </div>
+
+      <header class="topbar" role="banner" aria-label="System status strip">
+        <div class="topbar__left">
+          <div class="brand">
+            <div class="brand__sigil" aria-hidden="true"></div>
+            <div class="brand__text">
+              <div class="brand__title">ORBITAL SYSTEMS</div>
+              <div class="brand__sub">OPS / CONSOLE NODE 07 • TRUSTLESS INSTRUMENTATION</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="topbar__center" aria-label="Primary status">
+          <div class="statusline">
+            <div class="statusline__label">MAIN</div>
+            <div class="statusline__value">
+              <span class="status-pill" id="mainStatePill" data-sev="ok">
+                <span class="status-pill__dot" aria-hidden="true"></span>
+                <span class="status-pill__text" id="mainStateText">BOOTING</span>
+              </span>
+              <span class="thin-sep" aria-hidden="true">/</span>
+              <span class="mono" id="sysCode">SYS-BOOT</span>
+            </div>
+          </div>
+
+          <div class="bootmeter" aria-label="Boot progress">
+            <div class="bootmeter__bar">
+              <div class="bootmeter__fill" id="bootFill"></div>
+            </div>
+            <div class="bootmeter__meta">
+              <span class="mono" id="bootPct">00%</span>
+              <span class="bootmeter__hint" id="bootHint">Handshake: cold start</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="topbar__right">
+          <div class="chiprow" aria-label="Console flags">
+            <span class="chip" id="chipPower" data-state="syncing">POWER</span>
+            <span class="chip" id="chipComms" data-state="offline">COMMS</span>
+            <span class="chip" id="chipThermal" data-state="offline">THERM</span>
+            <span class="chip" id="chipSec" data-state="offline">SEC</span>
+            <span class="chip" id="chipNav" data-state="offline">NAV</span>
+          </div>
+
+          <div class="topbar__clock" aria-label="System clock">
+            <div class="clock">
+              <span class="clock__label">LOCAL</span>
+              <span class="clock__time mono" id="clock">--:--:--</span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="frame">
+        <nav class="rail" aria-label="Modules">
+          <div class="rail__section">
+            <div class="rail__title">MODULES</div>
+            <div class="rail__stack" role="tablist" aria-label="Module tabs">
+              <button class="railbtn is-active" type="button" role="tab" aria-selected="true" data-tab="overview">
+                <span class="railbtn__k">F1</span>
+                <span class="railbtn__t">OVERVIEW</span>
+              </button>
+              <button class="railbtn" type="button" role="tab" aria-selected="false" data-tab="power">
+                <span class="railbtn__k">F2</span>
+                <span class="railbtn__t">POWER</span>
+              </button>
+              <button class="railbtn" type="button" role="tab" aria-selected="false" data-tab="telemetry">
+                <span class="railbtn__k">F3</span>
+                <span class="railbtn__t">TELEMETRY</span>
+              </button>
+              <button class="railbtn" type="button" role="tab" aria-selected="false" data-tab="signals">
+                <span class="railbtn__k">F4</span>
+                <span class="railbtn__t">SIGNALS</span>
+              </button>
+              <button class="railbtn" type="button" role="tab" aria-selected="false" data-tab="security">
+                <span class="railbtn__k">F5</span>
+                <span class="railbtn__t">SECURITY</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="rail__section">
+            <div class="rail__title">MODE</div>
+            <div class="rail__stack">
+              <button class="railbtn railbtn--mode" type="button" id="modeOps" data-mode-pick="ops">
+                <span class="railbtn__t">OPS CYAN</span>
+              </button>
+              <button class="railbtn railbtn--mode" type="button" id="modeAlert" data-mode-pick="alert">
+                <span class="railbtn__t">RED ALERT</span>
+              </button>
+              <button class="railbtn railbtn--mode" type="button" id="modeLow" data-mode-pick="low">
+                <span class="railbtn__t">LOW POWER</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="rail__section">
+            <div class="rail__title">TOGGLES</div>
+            <div class="rail__stack">
+              <button class="railbtn railbtn--tiny" type="button" id="toggleCrt" aria-pressed="true">
+                <span class="railbtn__t">CRT FLICKER</span>
+              </button>
+              <button class="railbtn railbtn--tiny" type="button" id="toggleScan" aria-pressed="true">
+                <span class="railbtn__t">SCANLINES</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="rail__footer">
+            <div class="rail__hint">
+              <div class="rail__hintTitle">KEYS</div>
+              <div class="rail__hintBody mono">
+                P POWER • A ALERT • L LOCK • 1–5 COMMANDS
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <main class="main" id="main" role="main" aria-label="Console panels">
+          <section class="grid">
+            <article class="panel panel--power" data-panel="power" aria-label="Power and system state">
+              <header class="panel__head">
+                <div class="panel__title">
+                  <span class="panel__kicker">CORE</span>
+                  <span class="panel__name">POWER / SYSTEM STATE</span>
+                </div>
+                <div class="panel__meta mono">
+                  <span class="tag">BAY-03</span>
+                  <span class="tag">RACK-7</span>
+                  <span class="tag" id="lockTag" data-on="0">UNLOCKED</span>
+                </div>
+              </header>
+
+              <div class="panel__body">
+                <div class="power">
+                  <div class="power__col">
+                    <div class="readout">
+                      <div class="readout__label">MAIN STATUS</div>
+                      <div class="readout__value segment" id="segmentMain">BOOTING</div>
+                      <div class="readout__sub mono" id="segmentSub">INITIAL LINK • COLD START</div>
+                    </div>
+
+                    <div class="controls">
+                      <button class="btn btn--primary" id="btnPower" type="button">
+                        <span class="btn__icon" aria-hidden="true"></span>
+                        <span class="btn__text">POWER</span>
+                        <span class="btn__meta mono" id="btnPowerMeta">HOLD TO TOGGLE</span>
+                      </button>
+
+                      <div class="toggles" role="group" aria-label="State toggles">
+                        <button class="btn btn--ghost" id="btnLock" type="button" aria-pressed="false">
+                          <span class="btn__text">LOCK</span>
+                          <span class="btn__meta mono">L</span>
+                        </button>
+                        <button class="btn btn--ghost" id="btnAlert" type="button" aria-pressed="false">
+                          <span class="btn__text">ALERT</span>
+                          <span class="btn__meta mono">A</span>
+                        </button>
+                        <button class="btn btn--ghost" id="btnRandomize" type="button">
+                          <span class="btn__text">REROLL</span>
+                          <span class="btn__meta mono">↻</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="subsystems" aria-label="Subsystem status chips">
+                      <div class="subsystems__title">SUBSYSTEMS</div>
+                      <div class="subsystems__grid">
+                        <div class="subsys" data-subsys="core">
+                          <div class="subsys__name">CORE</div>
+                          <div class="subsys__state" id="subCore" data-state="syncing">SYNCING</div>
+                        </div>
+                        <div class="subsys" data-subsys="comms">
+                          <div class="subsys__name">COMMS</div>
+                          <div class="subsys__state" id="subComms" data-state="offline">OFFLINE</div>
+                        </div>
+                        <div class="subsys" data-subsys="thermal">
+                          <div class="subsys__name">THERM</div>
+                          <div class="subsys__state" id="subThermal" data-state="offline">OFFLINE</div>
+                        </div>
+                        <div class="subsys" data-subsys="nav">
+                          <div class="subsys__name">NAV</div>
+                          <div class="subsys__state" id="subNav" data-state="offline">OFFLINE</div>
+                        </div>
+                        <div class="subsys" data-subsys="sec">
+                          <div class="subsys__name">SEC</div>
+                          <div class="subsys__state" id="subSec" data-state="offline">OFFLINE</div>
+                        </div>
+                        <div class="subsys" data-subsys="env">
+                          <div class="subsys__name">ENV</div>
+                          <div class="subsys__state" id="subEnv" data-state="offline">OFFLINE</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="power__col power__col--right">
+                    <div class="bootseq" aria-label="Boot sequence">
+                      <div class="bootseq__title">BOOT SEQUENCE</div>
+                      <ol class="bootseq__list mono" id="bootList" aria-live="polite"></ol>
+                    </div>
+
+                    <div class="dial" aria-label="Core stability dial">
+                      <div class="dial__ring" aria-hidden="true"></div>
+                      <div class="dial__face">
+                        <div class="dial__label">STABILITY</div>
+                        <div class="dial__value mono"><span id="stabilityPct">--</span>%</div>
+                      </div>
+                      <div class="dial__needle" id="dialNeedle" aria-hidden="true"></div>
+                      <div class="dial__ticks" aria-hidden="true"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel panel--telemetry" data-panel="telemetry" aria-label="Telemetry panel">
+              <header class="panel__head">
+                <div class="panel__title">
+                  <span class="panel__kicker">SENSORS</span>
+                  <span class="panel__name">TELEMETRY</span>
+                </div>
+                <div class="panel__meta mono">
+                  <span class="tag">LIVE</span>
+                  <span class="tag">DRIFT</span>
+                  <span class="tag" id="nominalTag" data-on="1">NOMINAL</span>
+                </div>
+              </header>
+
+              <div class="panel__body">
+                <div class="telemetry">
+                  <div class="telemetry__grid">
+                    <div class="metric" data-metric="reactor">
+                      <div class="metric__head">
+                        <div class="metric__name">REACTOR LOAD</div>
+                        <div class="metric__code mono">RC-LD</div>
+                      </div>
+                      <div class="metric__value segment">
+                        <span id="mReactor">--</span><span class="metric__unit">%</span>
+                      </div>
+                      <div class="meter" aria-hidden="true">
+                        <div class="meter__fill" id="barReactor"></div>
+                      </div>
+                      <div class="metric__foot mono"><span id="mReactorTrend">—</span> / band 45–85</div>
+                    </div>
+
+                    <div class="metric" data-metric="pressure">
+                      <div class="metric__head">
+                        <div class="metric__name">HULL PRESSURE</div>
+                        <div class="metric__code mono">HL-PSI</div>
+                      </div>
+                      <div class="metric__value segment">
+                        <span id="mPressure">--</span><span class="metric__unit">kPa</span>
+                      </div>
+                      <div class="meter" aria-hidden="true">
+                        <div class="meter__fill" id="barPressure"></div>
+                      </div>
+                      <div class="metric__foot mono">seal variance <span id="mPressureVar">--</span></div>
+                    </div>
+
+                    <div class="metric" data-metric="comms">
+                      <div class="metric__head">
+                        <div class="metric__name">COMMS INTEGRITY</div>
+                        <div class="metric__code mono">CM-INT</div>
+                      </div>
+                      <div class="metric__value segment">
+                        <span id="mComms">--</span><span class="metric__unit">%</span>
+                      </div>
+                      <div class="meter" aria-hidden="true">
+                        <div class="meter__fill" id="barComms"></div>
+                      </div>
+                      <div class="metric__foot mono">phase drift <span id="mCommsDrift">--</span></div>
+                    </div>
+
+                    <div class="metric" data-metric="thermal">
+                      <div class="metric__head">
+                        <div class="metric__name">THERMAL DISPERSION</div>
+                        <div class="metric__code mono">TH-DSP</div>
+                      </div>
+                      <div class="metric__value segment">
+                        <span id="mThermal">--</span><span class="metric__unit">°C</span>
+                      </div>
+                      <div class="meter" aria-hidden="true">
+                        <div class="meter__fill" id="barThermal"></div>
+                      </div>
+                      <div class="metric__foot mono">radiator loop <span id="mThermalLoop">--</span></div>
+                    </div>
+
+                    <div class="metric" data-metric="gain">
+                      <div class="metric__head">
+                        <div class="metric__name">SIGNAL GAIN</div>
+                        <div class="metric__code mono">SG-GN</div>
+                      </div>
+                      <div class="metric__value segment">
+                        <span id="mGain">--</span><span class="metric__unit">dB</span>
+                      </div>
+                      <div class="meter" aria-hidden="true">
+                        <div class="meter__fill" id="barGain"></div>
+                      </div>
+                      <div class="metric__foot mono">noise floor <span id="mNoise">--</span></div>
+                    </div>
+                  </div>
+
+                  <div class="telemetry__side">
+                    <div class="panellet">
+                      <div class="panellet__title">ENV TRACE</div>
+                      <div class="spark" aria-hidden="true">
+                        <div class="spark__line" id="sparkLine"></div>
+                      </div>
+                      <div class="panellet__meta mono">
+                        <span>microparticles</span>
+                        <span id="envDust">--</span>
+                      </div>
+                    </div>
+
+                    <div class="panellet">
+                      <div class="panellet__title">LINK QUALITY</div>
+                      <div class="segbar" aria-hidden="true" id="segLink">
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                      </div>
+                      <div class="panellet__meta mono">
+                        <span>channel</span>
+                        <span id="linkChan">—</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel panel--radar" data-panel="signals" aria-label="Radar sweep panel">
+              <header class="panel__head">
+                <div class="panel__title">
+                  <span class="panel__kicker">SCAN</span>
+                  <span class="panel__name">RADAR / SWEEP</span>
+                </div>
+                <div class="panel__meta mono">
+                  <span class="tag">RNG 80km</span>
+                  <span class="tag">AZ 270°</span>
+                  <span class="tag" id="contactTag">CONTACTS: <span id="contactCount">0</span></span>
+                </div>
+              </header>
+
+              <div class="panel__body">
+                <div class="radar">
+                  <div class="radar__screen" role="img" aria-label="Circular radar grid with sweep and contacts">
+                    <div class="radar__grid" aria-hidden="true"></div>
+                    <div class="radar__sweep" aria-hidden="true"></div>
+                    <div class="radar__glow" aria-hidden="true"></div>
+                    <div class="radar__blips" id="radarBlips" aria-hidden="true"></div>
+                    <div class="radar__cross" aria-hidden="true"></div>
+                  </div>
+
+                  <div class="radar__meta">
+                    <div class="kv mono">
+                      <div class="kv__k">SWEEP</div>
+                      <div class="kv__v"><span id="sweepHz">--</span> Hz</div>
+                    </div>
+                    <div class="kv mono">
+                      <div class="kv__k">CLUTTER</div>
+                      <div class="kv__v"><span id="clutterPct">--</span>%</div>
+                    </div>
+                    <div class="kv mono">
+                      <div class="kv__k">IFF</div>
+                      <div class="kv__v" id="iffMode">PASSIVE</div>
+                    </div>
+
+                    <div class="radar__actions">
+                      <button class="btn btn--ghost" id="btnPing" type="button">
+                        <span class="btn__text">PING</span>
+                        <span class="btn__meta mono">1</span>
+                      </button>
+                      <button class="btn btn--ghost" id="btnSweep" type="button">
+                        <span class="btn__text">SWEEP</span>
+                        <span class="btn__meta mono">2</span>
+                      </button>
+                      <button class="btn btn--ghost" id="btnIff" type="button">
+                        <span class="btn__text">IFF</span>
+                        <span class="btn__meta mono">3</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel panel--log" data-panel="security" aria-label="Alerts and incident log">
+              <header class="panel__head">
+                <div class="panel__title">
+                  <span class="panel__kicker">SEC</span>
+                  <span class="panel__name">ALERTS / INCIDENT LOG</span>
+                </div>
+                <div class="panel__meta mono">
+                  <span class="tag">BUFFER</span>
+                  <span class="tag" id="alertCountTag">ALERTS: <span id="alertCount">0</span></span>
+                  <span class="tag">ROLLING</span>
+                </div>
+              </header>
+
+              <div class="panel__body">
+                <div class="log">
+                  <div class="log__controls" role="group" aria-label="Log actions">
+                    <button class="btn btn--danger" id="btnAck" type="button">
+                      <span class="btn__text">ACK</span>
+                      <span class="btn__meta mono">4</span>
+                    </button>
+                    <button class="btn btn--ghost" id="btnClear" type="button">
+                      <span class="btn__text">CLEAR</span>
+                      <span class="btn__meta mono">5</span>
+                    </button>
+                    <button class="btn btn--ghost" id="btnInject" type="button">
+                      <span class="btn__text">INJECT</span>
+                      <span class="btn__meta mono">+</span>
+                    </button>
+                  </div>
+
+                  <div class="log__viewport" id="logViewport" role="log" aria-live="polite" aria-relevant="additions">
+                    <ul class="log__list" id="logList"></ul>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="panel panel--signals" data-panel="signals" aria-label="Signal analyzer">
+              <header class="panel__head">
+                <div class="panel__title">
+                  <span class="panel__kicker">RF</span>
+                  <span class="panel__name">SIGNAL ANALYZER</span>
+                </div>
+                <div class="panel__meta mono">
+                  <span class="tag">CH A–H</span>
+                  <span class="tag" id="instabTag">INSTABILITY: <span id="instabPct">--</span>%</span>
+                  <span class="tag" id="syncTag" data-on="0">UNSYNCED</span>
+                </div>
+              </header>
+
+              <div class="panel__body">
+                <div class="signals">
+                  <div class="signals__bars" aria-label="Equalizer bars" id="eqBars">
+                    <div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div>
+                    <div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div>
+                    <div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div>
+                    <div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div>
+                    <div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div><div class="eqbar"></div>
+                  </div>
+
+                  <div class="signals__side">
+                    <div class="panellet">
+                      <div class="panellet__title">CHANNEL LOCK</div>
+                      <div class="knob" aria-hidden="true">
+                        <div class="knob__rim"></div>
+                        <div class="knob__cap"></div>
+                        <div class="knob__pointer" id="knobPointer"></div>
+                      </div>
+                      <div class="panellet__meta mono">
+                        <span>mode</span>
+                        <span id="chanMode">AUTO</span>
+                      </div>
+                    </div>
+
+                    <div class="panellet">
+                      <div class="panellet__title">CHANNEL STATUS</div>
+                      <div class="tinygrid" aria-hidden="true" id="tinyGrid">
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                      </div>
+                      <div class="panellet__meta mono">
+                        <span>drift</span>
+                        <span id="chanDrift">--</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </section>
+        </main>
+      </div>
+
+      <footer class="bottombar" role="contentinfo" aria-label="Command strip">
+        <div class="bottombar__left">
+          <div class="cmdstrip" role="group" aria-label="Commands">
+            <button class="cmdbtn" id="cmdArm" type="button" aria-pressed="false">
+              <span class="cmdbtn__t">ARM</span>
+              <span class="cmdbtn__s mono" id="armState">SAFE</span>
+            </button>
+            <button class="cmdbtn" id="cmdVent" type="button">
+              <span class="cmdbtn__t">VENT</span>
+              <span class="cmdbtn__s mono">PRESS</span>
+            </button>
+            <button class="cmdbtn" id="cmdSync" type="button">
+              <span class="cmdbtn__t">SYNC</span>
+              <span class="cmdbtn__s mono">LINK</span>
+            </button>
+            <button class="cmdbtn" id="cmdPurge" type="button">
+              <span class="cmdbtn__t">PURGE</span>
+              <span class="cmdbtn__s mono">LOG</span>
+            </button>
+            <button class="cmdbtn" id="cmdLock" type="button" aria-pressed="false">
+              <span class="cmdbtn__t">LOCK</span>
+              <span class="cmdbtn__s mono" id="lockState">OPEN</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="bottombar__center">
+          <div class="stripstats" aria-label="Bottom status metrics">
+            <div class="stripstat">
+              <div class="stripstat__k">CPU</div>
+              <div class="stripstat__v mono" id="cpuPct">--%</div>
+              <div class="mini" aria-hidden="true"><span id="miniCpu"></span></div>
+            </div>
+            <div class="stripstat">
+              <div class="stripstat__k">MEM</div>
+              <div class="stripstat__v mono" id="memPct">--%</div>
+              <div class="mini" aria-hidden="true"><span id="miniMem"></span></div>
+            </div>
+            <div class="stripstat">
+              <div class="stripstat__k">BUS</div>
+              <div class="stripstat__v mono" id="busPct">--%</div>
+              <div class="mini" aria-hidden="true"><span id="miniBus"></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottombar__right">
+          <div class="bunker mono" aria-label="System note">
+            <span class="bunker__label">NOTE</span>
+            <span class="bunker__text" id="bunkerText">do not trust readings obtained during eclipse drift</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script src="./script.js" defer></script>
+  </body>
+</html>
+

@@ -1,0 +1,8 @@
+services:
+  sci-fi-control-panel:
+    build: .
+    container_name: sci-fi-control-panel
+    ports:
+      - "3021:80"
+    restart: unless-stopped
+
